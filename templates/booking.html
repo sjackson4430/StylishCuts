@@ -32,7 +32,7 @@
                     <i class="fas fa-info-circle"></i> Business Hours: Monday - Saturday, 8:00 AM - 5:00 PM PST
                 </div>
                 <div id="calendar" class="mb-4"></div>
-                <form method="POST" id="appointmentForm">
+                <form method="POST" id="appointmentForm" data-action="book-appointment">
                     {{ form.hidden_tag() }}
                     <div class="row">
                         <div class="col-md-6">
@@ -78,7 +78,10 @@
                         </div>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Book Appointment</button>
+                        <button type="submit" class="btn btn-primary position-relative" id="submitBtn" disabled data-action="submit-booking">
+                            <span class="button-text">Book Appointment</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -110,6 +113,11 @@
     .alert-secondary {
         background-color: var(--bs-dark);
         border-color: var(--bs-border-color);
+    }
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        margin-left: 0.5rem;
     }
 </style>
 {% endblock %}

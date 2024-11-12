@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const errorMessages = document.getElementById('errorMessages');
     const errorText = document.getElementById('errorText');
+    const appointmentForm = document.getElementById('appointmentForm');
 
     // Configure business hours in PST
     const businessHours = {
@@ -53,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeZone: calendar.getOption('timeZone')
             });
 
-            // Use calendar's built-in timezone handling
             if (selectedDate < now) {
                 calendar.unselect();
                 console.warn('Attempted to book past date:', selectedDate);
@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Check if selected day is within business days (Monday-Saturday)
             const day = selectedDate.getDay();
             if (day === 0) { // Sunday
                 calendar.unselect();
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Update the hidden input and display
             dateInput.value = selectedDate.toISOString();
             const options = {
                 weekday: 'long',
@@ -86,14 +84,12 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDateTime.classList.add('alert-success');
             submitBtn.disabled = false;
 
-            // Remove previous selection highlights
             calendar.getEvents().forEach(event => {
                 if (event.classNames.includes('selection-highlight')) {
                     event.remove();
                 }
             });
 
-            // Add new selection highlight
             calendar.addEvent({
                 start: info.start,
                 end: info.end,
@@ -116,7 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDateTime.classList.add('alert-secondary');
             submitBtn.disabled = true;
 
-            // Remove selection highlights
             calendar.getEvents().forEach(event => {
                 if (event.classNames.includes('selection-highlight')) {
                     event.remove();
@@ -124,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         },
         validRange: function(nowDate) {
-            // Allow booking only for the next 30 days
             let endDate = new Date(nowDate);
             endDate.setDate(endDate.getDate() + 30);
             return {
@@ -137,7 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
     console.log('Calendar initialized successfully');
 
-    // Helper function to show error messages
     function showError(message) {
         errorText.textContent = message;
         errorMessages.style.display = 'block';
@@ -146,28 +139,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // Form validation and submission handling
-    const appointmentForm = document.getElementById('appointmentForm');
-    appointmentForm.addEventListener('submit', function(e) {
-        console.log('Form submission attempted');
-
-        if (!dateInput.value) {
-            e.preventDefault();
-            console.warn('Form submission blocked: No time slot selected');
-            showError('Please select a time slot before submitting.');
-            return;
+    function validateForm() {
+        const requiredFields = ['client_name', 'client_email', 'service', 'date'];
+        for (const field of requiredFields) {
+            const input = document.getElementById(field);
+            if (!input || !input.value.trim()) {
+                showError(`Please fill in all required fields`);
+                return false;
+            }
         }
 
-        const formData = new FormData(this);
-        console.log('Form data collected:', {
-            name: formData.get('client_name'),
-            email: formData.get('client_email'),
-            service: formData.get('service'),
-            date: formData.get('date')
-        });
+        const emailInput = document.getElementById('client_email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput.value.trim())) {
+            showError('Please enter a valid email address');
+            return false;
+        }
+
+        return true;
+    }
+
+    appointmentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const buttonText = submitBtn.querySelector('.button-text');
+        const spinner = submitBtn.querySelector('.spinner-border');
+        
+        try {
+            if (!validateForm()) {
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            buttonText.textContent = 'Booking...';
+            spinner.classList.remove('d-none');
+            
+            const formData = new FormData(this);
+            const response = await fetch('/booking', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                console.log('Booking successful:', result);
+                window.location.href = result.redirect || '/';
+            } else {
+                throw new Error(result.error || 'Booking failed');
+            }
+        } catch (error) {
+            console.error('Booking error:', error);
+            showError(error.message);
+        } finally {
+            submitBtn.disabled = false;
+            buttonText.textContent = 'Book Appointment';
+            spinner.classList.add('d-none');
+        }
     });
 
-    // Service change handler
     const serviceSelect = document.getElementById('service');
     serviceSelect.addEventListener('change', function() {
         console.log('Service changed:', {
