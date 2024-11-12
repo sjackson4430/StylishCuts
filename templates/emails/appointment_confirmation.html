@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .details { background: #f9f9f9; padding: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Appointment Confirmation</h1>
+        </div>
+        
+        <p>Dear {{ appointment.client_name }},</p>
+        
+        <p>Your appointment at Stylish Cuts has been confirmed. Here are your appointment details:</p>
+        
+        <div class="details">
+            <p><strong>Service:</strong> {{ appointment.service }}</p>
+            <p><strong>Date:</strong> {{ appointment.date.strftime('%B %d, %Y') }}</p>
+            <p><strong>Time:</strong> {{ appointment.date.strftime('%I:%M %p') }}</p>
+        </div>
+        
+        <p>Location: 123 Main Street, City, State 12345</p>
+        
+        <p>If you need to cancel or reschedule your appointment, please contact us at (555) 123-4567.</p>
+        
+        <p>Thank you for choosing Stylish Cuts!</p>
+    </div>
+</body>
+</html>

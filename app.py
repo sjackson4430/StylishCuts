@@ -2,12 +2,14 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 
 class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
+mail = Mail()
 app = Flask(__name__)
 
 # Configure secret key for session management
@@ -21,8 +23,17 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Initialize database
+# Configure Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = ('Stylish Cuts', os.environ.get('MAIL_USERNAME'))
+
+# Initialize extensions
 db.init_app(app)
+mail.init_app(app)
 
 # Initialize login manager
 login_manager = LoginManager()

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { margin-bottom: 30px; }
+        .details { background: #f9f9f9; padding: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>New Appointment Booking</h2>
+        </div>
+        
+        <p>A new appointment has been booked:</p>
+        
+        <div class="details">
+            <p><strong>Client:</strong> {{ appointment.client_name }}</p>
+            <p><strong>Email:</strong> {{ appointment.client_email }}</p>
+            <p><strong>Service:</strong> {{ appointment.service }}</p>
+            <p><strong>Date:</strong> {{ appointment.date.strftime('%B %d, %Y') }}</p>
+            <p><strong>Time:</strong> {{ appointment.date.strftime('%I:%M %p') }}</p>
+        </div>
+        
+        <p>You can view all appointments in the <a href="{{ url_for('admin', _external=True) }}">admin dashboard</a>.</p>
+    </div>
+</body>
+</html>

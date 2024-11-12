@@ -5,6 +5,7 @@ from app import app, db
 from models import User, Appointment, Deal, Service
 from forms import LoginForm, AppointmentForm, DealForm, ServiceForm
 from datetime import datetime
+from utils.email_sender import send_appointment_confirmation, send_appointment_notification_admin
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -51,7 +52,16 @@ def booking():
         )
         db.session.add(appointment)
         db.session.commit()
-        flash('Appointment booked successfully!')
+        
+        # Send email notifications
+        try:
+            send_appointment_confirmation(appointment)
+            send_appointment_notification_admin(appointment)
+            flash('Appointment booked successfully! Please check your email for confirmation.')
+        except Exception as e:
+            app.logger.error(f"Failed to send email notification: {str(e)}")
+            flash('Appointment booked successfully! However, there was an issue sending the confirmation email.')
+        
         return redirect(url_for('index'))
     
     return render_template('booking.html', form=form)
