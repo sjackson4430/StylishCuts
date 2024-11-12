@@ -16,7 +16,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "dev-secret-key"
 
 # Configure database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
@@ -45,32 +48,39 @@ with app.app_context():
     import models  # noqa: F401
     import routes  # noqa: F401
     
-    db.create_all()
+    try:
+        db.create_all()
+        app.logger.info("Database tables created successfully")
+        
+        # Create admin user if it doesn't exist
+        from models import User
+        from werkzeug.security import generate_password_hash
+        
+        admin = User.query.filter_by(email='admin@stylishcuts.com').first()
+        if not admin:
+            admin = User(
+                username='admin',
+                email='admin@stylishcuts.com',
+                password_hash=generate_password_hash('admin123'),
+                is_admin=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+            app.logger.info("Admin user created successfully")
 
-    # Create admin user if it doesn't exist
-    from models import User
-    from werkzeug.security import generate_password_hash
-    
-    admin = User.query.filter_by(email='admin@stylishcuts.com').first()
-    if not admin:
-        admin = User(
-            username='admin',
-            email='admin@stylishcuts.com',
-            password_hash=generate_password_hash('admin123'),
-            is_admin=True
-        )
-        db.session.add(admin)
-        db.session.commit()
-
-    # Create default services if none exist
-    from models import Service
-    if Service.query.count() == 0:
-        default_services = [
-            Service(name='Classic Haircut', description='Traditional barbershop haircut', price=30.00, duration=30),
-            Service(name='Beard Trim', description='Professional beard grooming', price=20.00, duration=30),
-            Service(name='Hair & Beard Combo', description='Complete grooming package', price=45.00, duration=60),
-            Service(name='Hot Towel Shave', description='Traditional straight razor shave', price=35.00, duration=45)
-        ]
-        for service in default_services:
-            db.session.add(service)
-        db.session.commit()
+        # Create default services if none exist
+        from models import Service
+        if Service.query.count() == 0:
+            default_services = [
+                Service(name='Classic Haircut', description='Traditional barbershop haircut', price=30.00, duration=30),
+                Service(name='Beard Trim', description='Professional beard grooming', price=20.00, duration=30),
+                Service(name='Hair & Beard Combo', description='Complete grooming package', price=45.00, duration=60),
+                Service(name='Hot Towel Shave', description='Traditional straight razor shave', price=35.00, duration=45)
+            ]
+            for service in default_services:
+                db.session.add(service)
+            db.session.commit()
+            app.logger.info("Default services created successfully")
+    except Exception as e:
+        app.logger.error(f"Error during database initialization: {str(e)}")
+        raise
