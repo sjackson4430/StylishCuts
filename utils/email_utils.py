@@ -1,9 +1,13 @@
-from flask_mail import Message
-from app import mail, app
+import os
 from flask import render_template_string
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email
+from app import app
 
 def send_appointment_confirmation(appointment):
-    # Email template for customer
+    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+    
+    # Email templates
     customer_template = '''
     Dear {{ appointment.client_name }},
 
@@ -12,7 +16,7 @@ def send_appointment_confirmation(appointment):
     Appointment Details:
     Service: {{ appointment.service }}
     Date: {{ appointment.date.strftime('%B %d, %Y') }}
-    Time: {{ appointment.date.strftime('%I:%M %p') }}
+    Time: {{ appointment.date.strftime('%I:%M %p') }} PST
 
     Location: 123 Main Street, City, State 12345
 
@@ -26,7 +30,6 @@ def send_appointment_confirmation(appointment):
     Stylish Cuts Team
     '''
     
-    # Email template for admin
     admin_template = '''
     New Appointment Booking:
 
@@ -34,22 +37,32 @@ def send_appointment_confirmation(appointment):
     Email: {{ appointment.client_email }}
     Service: {{ appointment.service }}
     Date: {{ appointment.date.strftime('%B %d, %Y') }}
-    Time: {{ appointment.date.strftime('%I:%M %p') }}
+    Time: {{ appointment.date.strftime('%I:%M %p') }} PST
     '''
+
+    # Sender email (should be verified in SendGrid)
+    from_email = Email("appointments@stylishcuts.com")
     
-    with app.app_context():
+    try:
         # Send confirmation to customer
-        customer_msg = Message(
-            'Appointment Confirmation - Stylish Cuts',
-            recipients=[appointment.client_email]
+        customer_message = Mail(
+            from_email=from_email,
+            to_emails=appointment.client_email,
+            subject='Appointment Confirmation - Stylish Cuts',
+            html_content=render_template_string(customer_template, appointment=appointment)
         )
-        customer_msg.body = render_template_string(customer_template, appointment=appointment)
-        mail.send(customer_msg)
+        sg.send(customer_message)
         
         # Send notification to admin
-        admin_msg = Message(
-            'New Appointment Booking',
-            recipients=['admin@stylishcuts.com']
+        admin_message = Mail(
+            from_email=from_email,
+            to_emails='admin@stylishcuts.com',
+            subject='New Appointment Booking',
+            html_content=render_template_string(admin_template, appointment=appointment)
         )
-        admin_msg.body = render_template_string(admin_template, appointment=appointment)
-        mail.send(admin_msg)
+        sg.send(admin_message)
+        
+        return True
+    except Exception as e:
+        app.logger.error(f"Failed to send email: {str(e)}")
+        return False

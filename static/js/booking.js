@@ -29,31 +29,41 @@ document.addEventListener('DOMContentLoaded', function() {
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
         },
-        eventSources: [
-            {
-                url: '/api/available-slots',
-                method: 'GET',
-                failure: function() {
-                    alert('There was an error fetching booked appointments.');
-                }
+        eventSources: [{
+            url: '/api/available-slots',
+            method: 'GET',
+            failure: function() {
+                alert('There was an error fetching booked appointments.');
             }
-        ],
+        }],
         select: function(info) {
             const selectedDate = info.start;
             const now = new Date();
             
+            // Convert current time to PST for comparison
+            const pstNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+            const pstSelected = new Date(selectedDate.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+            
             // Prevent selecting past dates
-            if (selectedDate < now) {
+            if (pstSelected < pstNow) {
                 calendar.unselect();
                 alert('Cannot book appointments in the past');
                 return;
             }
 
-            // Check if the selected time is within business hours
-            const hour = selectedDate.getHours();
+            // Check if selected day is within business days (Monday-Saturday)
+            const day = pstSelected.getDay();
+            if (day === 0) { // Sunday
+                calendar.unselect();
+                alert('We are closed on Sundays. Please select a day between Monday and Saturday.');
+                return;
+            }
+
+            // Check if the selected time is within business hours (8 AM - 5 PM PST)
+            const hour = pstSelected.getHours();
             if (hour < 8 || hour >= 17) {
                 calendar.unselect();
-                alert('Please select a time between 8 AM and 5 PM PST');
+                alert('Please select a time between 8:00 AM and 5:00 PM PST');
                 return;
             }
 
@@ -66,9 +76,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/Los_Angeles',
                 timeZoneName: 'short'
             };
-            selectedDateTime.textContent = `Selected: ${selectedDate.toLocaleString('en-US', options)} PST`;
+            selectedDateTime.textContent = `Selected: ${selectedDate.toLocaleString('en-US', options)}`;
             selectedDateTime.classList.remove('alert-secondary');
             selectedDateTime.classList.add('alert-success');
             submitBtn.disabled = false;
