@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <h3>Upcoming Appointments</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td>{{ appointment.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ appointment.client_name }}<br>
+                            <small>{{ appointment.client_email }}</small>
+                        </td>
+                        <td>{{ appointment.service }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h3>Deals Management</h3>
+        <a href="{{ url_for('manage_deals') }}" class="btn btn-primary mb-3">Add New Deal</a>
+        
+        <div class="list-group">
+            {% for deal in deals %}
+            <div class="list-group-item">
+                <h5 class="mb-1">{{ deal.title }}</h5>
+                <p class="mb-1">{{ deal.description }}</p>
+                <small>Valid until: {{ deal.valid_until.strftime('%Y-%m-%d') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
