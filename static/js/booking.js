@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
-        plugins: ['timeGrid', 'interaction'],
+        timeZone: 'America/Los_Angeles',
         slotMinTime: businessHours.startTime,
         slotMaxTime: businessHours.endTime,
         slotDuration: '01:00:00',
@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectable: true,
         selectMirror: true,
         unselectAuto: true,
+        nowIndicator: true,
         businessHours: businessHours,
         selectConstraint: 'businessHours',
         headerToolbar: {
@@ -28,7 +29,15 @@ document.addEventListener('DOMContentLoaded', function() {
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
         },
-        events: '/api/available-slots',
+        eventSources: [
+            {
+                url: '/api/available-slots',
+                method: 'GET',
+                failure: function() {
+                    alert('There was an error fetching booked appointments.');
+                }
+            }
+        ],
         select: function(info) {
             const selectedDate = info.start;
             const now = new Date();
@@ -60,24 +69,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeZoneName: 'short'
             };
             selectedDateTime.textContent = `Selected: ${selectedDate.toLocaleString('en-US', options)} PST`;
+            selectedDateTime.classList.remove('alert-secondary');
+            selectedDateTime.classList.add('alert-success');
             submitBtn.disabled = false;
 
-            // Highlight the selected time slot
-            calendar.unselect();
+            // Remove previous selection highlights
+            calendar.getEvents().forEach(event => {
+                if (event.classNames.includes('selection-highlight')) {
+                    event.remove();
+                }
+            });
+
+            // Add new selection highlight
             calendar.addEvent({
                 start: info.start,
                 end: info.end,
+                classNames: ['selection-highlight'],
                 display: 'background',
-                color: '#28a745'
+                backgroundColor: 'var(--bs-success)'
             });
         },
         unselect: function() {
             dateInput.value = '';
             selectedDateTime.textContent = 'No time slot selected';
+            selectedDateTime.classList.remove('alert-success');
+            selectedDateTime.classList.add('alert-secondary');
             submitBtn.disabled = true;
-            // Remove any temporary selection highlights
+
+            // Remove selection highlights
             calendar.getEvents().forEach(event => {
-                if (event.display === 'background' && event.backgroundColor === '#28a745') {
+                if (event.classNames.includes('selection-highlight')) {
                     event.remove();
                 }
             });

@@ -48,26 +48,23 @@
 
 {% block scripts %}
 <!-- FullCalendar CSS -->
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.css' rel='stylesheet' />
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid/main.css' rel='stylesheet' />
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 
 <!-- Font Awesome for icons -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 <!-- FullCalendar JS -->
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid/main.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/interaction/main.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
 
 <!-- Custom booking script -->
 <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
 
 <style>
-    .fc-event-time {
-        font-weight: bold;
-    }
     .fc-timegrid-slot {
         height: 4em !important;
+    }
+    .fc-event-selected {
+        background-color: var(--bs-success) !important;
     }
     .alert-secondary {
         background-color: var(--bs-dark);
