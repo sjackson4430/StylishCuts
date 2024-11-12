@@ -1,11 +1,12 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
 from models import User, Appointment, Deal, Service
 from forms import LoginForm, AppointmentForm, DealForm, ServiceForm
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.email_utils import send_appointment_confirmation
+import pytz
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -44,10 +45,30 @@ def booking():
     form.service.choices = [(s.id, s.name) for s in Service.query.all()]
     
     if form.validate_on_submit():
+        # Convert appointment time to PST
+        pst = pytz.timezone('America/Los_Angeles')
+        appointment_time = form.date.data
+        appointment_time_pst = appointment_time.astimezone(pst)
+        
+        # Validate business hours (8 AM to 5 PM PST)
+        if appointment_time_pst.hour < 8 or appointment_time_pst.hour >= 17:
+            flash('Please select a time between 8 AM and 5 PM PST')
+            return render_template('booking.html', form=form)
+        
+        # Check for existing appointments
+        existing_appointment = Appointment.query.filter_by(
+            date=appointment_time_pst
+        ).first()
+        
+        if existing_appointment:
+            flash('This time slot is already booked. Please select another time.')
+            return render_template('booking.html', form=form)
+        
+        # Create new appointment
         appointment = Appointment(
             client_name=form.client_name.data,
             client_email=form.client_email.data,
-            date=form.date.data,
+            date=appointment_time_pst,
             service=Service.query.get(form.service.data).name
         )
         db.session.add(appointment)
