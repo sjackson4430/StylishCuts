@@ -41,33 +41,45 @@ def logout():
 
 @app.route('/api/available-slots', methods=['GET'])
 def get_available_slots():
-    start_date = request.args.get('start')
-    end_date = request.args.get('end')
-    
-    if not start_date or not end_date:
-        return jsonify({'error': 'Start and end dates are required'}), 400
-    
-    # Convert to PST timezone
-    pst = pytz.timezone('America/Los_Angeles')
-    start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00')).astimezone(pst)
-    end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00')).astimezone(pst)
-    
-    # Get all appointments within the date range
-    appointments = Appointment.query.filter(
-        Appointment.date >= start_dt,
-        Appointment.date <= end_dt
-    ).all()
-    
-    # Convert appointments to events
-    booked_slots = [{
-        'title': 'Booked',
-        'start': appt.date.isoformat(),
-        'end': (appt.date + timedelta(hours=1)).isoformat(),
-        'display': 'background',
-        'color': '#ff0000'
-    } for appt in appointments]
-    
-    return jsonify(booked_slots)
+    try:
+        start_date = request.args.get('start')
+        end_date = request.args.get('end')
+        
+        if not start_date or not end_date:
+            app.logger.warning("Missing start or end date in available slots request")
+            return jsonify({'error': 'Start and end dates are required'}), 400
+        
+        # Convert to PST timezone
+        pst = pytz.timezone('America/Los_Angeles')
+        start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00')).astimezone(pst)
+        end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00')).astimezone(pst)
+        
+        app.logger.info(f"Fetching available slots between {start_dt} and {end_dt}")
+        
+        # Get all appointments within the date range
+        appointments = Appointment.query.filter(
+            Appointment.date >= start_dt,
+            Appointment.date <= end_dt
+        ).all()
+        
+        # Convert appointments to events
+        booked_slots = [{
+            'title': 'Booked',
+            'start': appt.date.isoformat(),
+            'end': (appt.date + timedelta(hours=1)).isoformat(),
+            'display': 'background',
+            'color': '#ff0000'
+        } for appt in appointments]
+        
+        app.logger.info(f"Found {len(booked_slots)} booked slots in the specified range")
+        return jsonify(booked_slots)
+        
+    except ValueError as e:
+        app.logger.error(f"Invalid date format in available slots request: {str(e)}")
+        return jsonify({'error': 'Invalid date format'}), 400
+    except Exception as e:
+        app.logger.error(f"Error fetching available slots: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/booking', methods=['GET', 'POST'])
 def booking():
@@ -75,15 +87,19 @@ def booking():
     form.service.choices = [(s.id, s.name) for s in Service.query.all()]
     
     if form.validate_on_submit():
+        app.logger.info("Processing new appointment booking submission")
         try:
             # Convert appointment time to PST
             pst = pytz.timezone('America/Los_Angeles')
             appointment_time = datetime.fromisoformat(form.date.data.replace('Z', '+00:00'))
             appointment_time_pst = appointment_time.astimezone(pst)
             
+            app.logger.info(f"Requested appointment time (PST): {appointment_time_pst}")
+            
             # Validate business hours (8 AM to 5 PM PST)
             if appointment_time_pst.hour < 8 or appointment_time_pst.hour >= 17:
-                flash('Please select a time between 8 AM and 5 PM PST')
+                app.logger.warning(f"Appointment time {appointment_time_pst} is outside business hours")
+                flash('Please select a time between 8 AM and 5 PM PST', 'error')
                 return render_template('booking.html', form=form)
             
             # Check for existing appointments
@@ -92,13 +108,15 @@ def booking():
             ).first()
             
             if existing_appointment:
-                flash('This time slot is already booked. Please select another time.')
+                app.logger.warning(f"Conflicting appointment found at {appointment_time_pst}")
+                flash('This time slot is already booked. Please select another time.', 'error')
                 return render_template('booking.html', form=form)
             
             # Create new appointment
             service = Service.query.get(form.service.data)
             if not service:
-                flash('Invalid service selected')
+                app.logger.error(f"Invalid service ID: {form.service.data}")
+                flash('Invalid service selected', 'error')
                 return render_template('booking.html', form=form)
                 
             appointment = Appointment(
@@ -107,22 +125,37 @@ def booking():
                 date=appointment_time_pst,
                 service=service.name
             )
-            db.session.add(appointment)
-            db.session.commit()
+            
+            # Save appointment to database
+            try:
+                db.session.add(appointment)
+                db.session.commit()
+                app.logger.info(f"Appointment saved successfully: ID {appointment.id}")
+            except Exception as e:
+                app.logger.error(f"Database error while saving appointment: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while saving your appointment. Please try again.', 'error')
+                return render_template('booking.html', form=form)
             
             # Send email notifications
-            try:
-                send_appointment_confirmation(appointment)
-                flash('Appointment booked successfully! A confirmation email has been sent.')
-            except Exception as e:
-                app.logger.error(f"Failed to send email notification: {str(e)}")
-                flash('Appointment booked successfully! However, there was an issue sending the confirmation email.')
+            success, error_message = send_appointment_confirmation(appointment)
+            if success:
+                flash('Appointment booked successfully! A confirmation email has been sent.', 'success')
+                app.logger.info(f"Appointment booking completed successfully for {appointment.client_email}")
+            else:
+                flash(f'Appointment booked successfully! However, there was an issue sending the confirmation email: {error_message}', 'warning')
+                app.logger.warning(f"Appointment booked but email notification failed: {error_message}")
             
             return redirect(url_for('index'))
             
-        except (ValueError, TypeError) as e:
-            app.logger.error(f"Invalid date format: {str(e)}")
-            flash('Invalid date format. Please select a valid time slot.')
+        except ValueError as e:
+            app.logger.error(f"Invalid date format in appointment submission: {str(e)}")
+            flash('Invalid date format. Please select a valid time slot.', 'error')
+            return render_template('booking.html', form=form)
+            
+        except Exception as e:
+            app.logger.error(f"Unexpected error during appointment booking: {str(e)}")
+            flash('An unexpected error occurred. Please try again.', 'error')
             return render_template('booking.html', form=form)
     
     return render_template('booking.html', form=form)

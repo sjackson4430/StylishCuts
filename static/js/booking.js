@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('date');
     const selectedDateTime = document.getElementById('selectedDateTime');
     const submitBtn = document.getElementById('submitBtn');
+    const errorMessages = document.getElementById('errorMessages');
+    const errorText = document.getElementById('errorText');
 
     // Configure business hours in PST
     const businessHours = {
@@ -11,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
         endTime: '17:00',
         timeZone: 'America/Los_Angeles'
     };
+
+    console.log('Initializing calendar with business hours:', businessHours);
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -36,18 +40,24 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'GET',
             failure: function(error) {
                 console.error('Error fetching booked appointments:', error);
-                alert('There was an error fetching booked appointments. Please try again.');
+                showError('Failed to load available appointment slots. Please refresh the page.');
             }
         }],
         select: function(info) {
             const selectedDate = info.start;
             const now = new Date();
 
+            console.log('Time slot selected:', {
+                selectedDate,
+                currentTime: now,
+                timeZone: calendar.getOption('timeZone')
+            });
+
             // Use calendar's built-in timezone handling
             if (selectedDate < now) {
                 calendar.unselect();
-                console.log('Attempted to book past date:', selectedDate);
-                alert('Cannot book appointments in the past');
+                console.warn('Attempted to book past date:', selectedDate);
+                showError('Cannot book appointments in the past');
                 return;
             }
 
@@ -55,8 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const day = selectedDate.getDay();
             if (day === 0) { // Sunday
                 calendar.unselect();
-                console.log('Attempted to book on Sunday:', selectedDate);
-                alert('We are closed on Sundays. Please select a day between Monday and Saturday.');
+                console.warn('Attempted to book on Sunday:', selectedDate);
+                showError('We are closed on Sundays. Please select a day between Monday and Saturday.');
                 return;
             }
 
@@ -92,13 +102,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 backgroundColor: 'var(--bs-success)'
             });
 
-            console.log('Time slot selected:', {
+            console.log('Time slot successfully selected:', {
                 date: selectedDate,
                 timeZone: calendar.getOption('timeZone'),
                 businessHours: calendar.getOption('businessHours')
             });
         },
         unselect: function() {
+            console.log('Time slot unselected');
             dateInput.value = '';
             selectedDateTime.textContent = 'No time slot selected';
             selectedDateTime.classList.remove('alert-success');
@@ -124,19 +135,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     calendar.render();
+    console.log('Calendar initialized successfully');
 
-    // Disable form submission if no time slot is selected
-    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+    // Helper function to show error messages
+    function showError(message) {
+        errorText.textContent = message;
+        errorMessages.style.display = 'block';
+        setTimeout(() => {
+            errorMessages.style.display = 'none';
+        }, 5000);
+    }
+
+    // Form validation and submission handling
+    const appointmentForm = document.getElementById('appointmentForm');
+    appointmentForm.addEventListener('submit', function(e) {
+        console.log('Form submission attempted');
+
         if (!dateInput.value) {
             e.preventDefault();
-            console.log('Form submission attempted without time slot');
-            alert('Please select a time slot before submitting.');
+            console.warn('Form submission blocked: No time slot selected');
+            showError('Please select a time slot before submitting.');
+            return;
         }
+
+        const formData = new FormData(this);
+        console.log('Form data collected:', {
+            name: formData.get('client_name'),
+            email: formData.get('client_email'),
+            service: formData.get('service'),
+            date: formData.get('date')
+        });
     });
 
-    // Update calendar view when service is changed
-    document.getElementById('service').addEventListener('change', function() {
-        console.log('Service changed, refreshing calendar');
+    // Service change handler
+    const serviceSelect = document.getElementById('service');
+    serviceSelect.addEventListener('change', function() {
+        console.log('Service changed:', {
+            newService: this.value,
+            serviceName: this.options[this.selectedIndex].text
+        });
         calendar.refetchEvents();
     });
 });

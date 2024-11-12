@@ -9,7 +9,7 @@ from app import app
 def send_appointment_confirmation(appointment):
     """
     Send appointment confirmation emails to both customer and admin using SMTP.
-    Returns True if both emails are sent successfully, False otherwise.
+    Returns (success: bool, error_message: str)
     """
     # Email templates with HTML formatting
     customer_template = '''
@@ -65,11 +65,22 @@ def send_appointment_confirmation(appointment):
     '''
 
     try:
+        # Log attempt to send email
+        app.logger.info(f"Attempting to send confirmation emails for appointment {appointment.id}")
+        
         # SMTP Configuration
         smtp_server = os.environ.get('SMTP_SERVER')
-        smtp_port = int(os.environ.get('SMTP_PORT'))
+        smtp_port = int(os.environ.get('SMTP_PORT', 465))  # Default to 465 for SSL
         smtp_username = os.environ.get('SMTP_USERNAME')
         smtp_password = os.environ.get('SMTP_PASSWORD')
+
+        if not all([smtp_server, smtp_port, smtp_username, smtp_password]):
+            error_msg = "SMTP configuration is incomplete"
+            app.logger.error(error_msg)
+            return False, error_msg
+
+        # Log SMTP connection attempt (without sensitive info)
+        app.logger.info(f"Connecting to SMTP server: {smtp_server}:{smtp_port}")
         
         # Create SSL context
         context = ssl.create_default_context()
@@ -77,10 +88,12 @@ def send_appointment_confirmation(appointment):
         with smtplib.SMTP_SSL(smtp_server, smtp_port, context=context) as server:
             try:
                 # Login to SMTP server
+                app.logger.info("Attempting SMTP authentication...")
                 server.login(smtp_username, smtp_password)
-                app.logger.info("Successfully connected to SMTP server")
+                app.logger.info("Successfully authenticated with SMTP server")
                 
-                # Send customer confirmation
+                # Prepare and send customer confirmation
+                app.logger.info(f"Preparing customer confirmation email for {appointment.client_email}")
                 msg = MIMEMultipart('alternative')
                 msg['Subject'] = 'Appointment Confirmation - Stylish Cuts'
                 msg['From'] = smtp_username
@@ -92,7 +105,8 @@ def send_appointment_confirmation(appointment):
                 server.send_message(msg)
                 app.logger.info(f"Customer confirmation email sent successfully to {appointment.client_email}")
                 
-                # Send admin notification
+                # Prepare and send admin notification
+                app.logger.info("Preparing admin notification email")
                 admin_msg = MIMEMultipart('alternative')
                 admin_msg['Subject'] = 'New Appointment Booking'
                 admin_msg['From'] = smtp_username
@@ -104,15 +118,24 @@ def send_appointment_confirmation(appointment):
                 server.send_message(admin_msg)
                 app.logger.info("Admin notification email sent successfully")
                 
-                return True
+                return True, "Emails sent successfully"
                 
             except smtplib.SMTPAuthenticationError as e:
-                app.logger.error(f"SMTP Authentication failed: {str(e)}")
-                return False
+                error_msg = "Failed to authenticate with SMTP server"
+                app.logger.error(f"{error_msg}: {str(e)}")
+                return False, error_msg
+                
+            except smtplib.SMTPRecipientsRefused as e:
+                error_msg = "Invalid recipient email address"
+                app.logger.error(f"{error_msg}: {str(e)}")
+                return False, error_msg
+                
             except smtplib.SMTPException as e:
-                app.logger.error(f"SMTP error occurred: {str(e)}")
-                return False
+                error_msg = "An error occurred while sending the email"
+                app.logger.error(f"{error_msg}: {str(e)}")
+                return False, error_msg
                 
     except Exception as e:
-        app.logger.error(f"Failed to send emails: {str(e)}")
-        return False
+        error_msg = "Failed to establish connection with SMTP server"
+        app.logger.error(f"{error_msg}: {str(e)}")
+        return False, error_msg

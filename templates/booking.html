@@ -8,6 +8,26 @@
                 <h2>Book an Appointment</h2>
             </div>
             <div class="card-body">
+                <!-- Status Messages Section -->
+                <div id="statusMessages">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Error Messages Section -->
+                <div id="errorMessages" style="display: none;" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span id="errorText"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> Business Hours: Monday - Saturday, 8:00 AM - 5:00 PM PST
                 </div>
@@ -19,16 +39,37 @@
                             <div class="mb-3">
                                 {{ form.client_name.label(class="form-label") }}
                                 {{ form.client_name(class="form-control") }}
+                                {% if form.client_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.client_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="mb-3">
                                 {{ form.client_email.label(class="form-label") }}
                                 {{ form.client_email(class="form-control") }}
+                                {% if form.client_email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.client_email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 {{ form.service.label(class="form-label") }}
                                 {{ form.service(class="form-control") }}
+                                {% if form.service.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.service.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             <div class="mb-3">
                                 {{ form.date(type="hidden") }}
