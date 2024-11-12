@@ -4,16 +4,26 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
+from flask_wtf.csrf import CSRFProtect
 
 class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
 mail = Mail()
+csrf = CSRFProtect()
 app = Flask(__name__)
 
 # Configure secret key for session management
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "dev-secret-key"
+
+# Configure security settings
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to False for HTTP in development
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 
 # Configure database
 database_url = os.environ.get("DATABASE_URL")
@@ -37,6 +47,7 @@ app.config['MAIL_DEFAULT_SENDER'] = ('Stylish Cuts', os.environ.get('MAIL_USERNA
 # Initialize extensions
 db.init_app(app)
 mail.init_app(app)
+csrf.init_app(app)
 
 # Initialize login manager
 login_manager = LoginManager()
