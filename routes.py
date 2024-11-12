@@ -39,50 +39,91 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/api/available-slots', methods=['GET'])
+def get_available_slots():
+    start_date = request.args.get('start')
+    end_date = request.args.get('end')
+    
+    if not start_date or not end_date:
+        return jsonify({'error': 'Start and end dates are required'}), 400
+    
+    # Convert to PST timezone
+    pst = pytz.timezone('America/Los_Angeles')
+    start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00')).astimezone(pst)
+    end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00')).astimezone(pst)
+    
+    # Get all appointments within the date range
+    appointments = Appointment.query.filter(
+        Appointment.date >= start_dt,
+        Appointment.date <= end_dt
+    ).all()
+    
+    # Convert appointments to events
+    booked_slots = [{
+        'title': 'Booked',
+        'start': appt.date.isoformat(),
+        'end': (appt.date + timedelta(hours=1)).isoformat(),
+        'display': 'background',
+        'color': '#ff0000'
+    } for appt in appointments]
+    
+    return jsonify(booked_slots)
+
 @app.route('/booking', methods=['GET', 'POST'])
 def booking():
     form = AppointmentForm()
     form.service.choices = [(s.id, s.name) for s in Service.query.all()]
     
     if form.validate_on_submit():
-        # Convert appointment time to PST
-        pst = pytz.timezone('America/Los_Angeles')
-        appointment_time = form.date.data
-        appointment_time_pst = appointment_time.astimezone(pst)
-        
-        # Validate business hours (8 AM to 5 PM PST)
-        if appointment_time_pst.hour < 8 or appointment_time_pst.hour >= 17:
-            flash('Please select a time between 8 AM and 5 PM PST')
-            return render_template('booking.html', form=form)
-        
-        # Check for existing appointments
-        existing_appointment = Appointment.query.filter_by(
-            date=appointment_time_pst
-        ).first()
-        
-        if existing_appointment:
-            flash('This time slot is already booked. Please select another time.')
-            return render_template('booking.html', form=form)
-        
-        # Create new appointment
-        appointment = Appointment(
-            client_name=form.client_name.data,
-            client_email=form.client_email.data,
-            date=appointment_time_pst,
-            service=Service.query.get(form.service.data).name
-        )
-        db.session.add(appointment)
-        db.session.commit()
-        
-        # Send email notifications
         try:
-            send_appointment_confirmation(appointment)
-            flash('Appointment booked successfully! A confirmation email has been sent.')
-        except Exception as e:
-            app.logger.error(f"Failed to send email notification: {str(e)}")
-            flash('Appointment booked successfully! However, there was an issue sending the confirmation email.')
-        
-        return redirect(url_for('index'))
+            # Convert appointment time to PST
+            pst = pytz.timezone('America/Los_Angeles')
+            appointment_time = datetime.fromisoformat(form.date.data.replace('Z', '+00:00'))
+            appointment_time_pst = appointment_time.astimezone(pst)
+            
+            # Validate business hours (8 AM to 5 PM PST)
+            if appointment_time_pst.hour < 8 or appointment_time_pst.hour >= 17:
+                flash('Please select a time between 8 AM and 5 PM PST')
+                return render_template('booking.html', form=form)
+            
+            # Check for existing appointments
+            existing_appointment = Appointment.query.filter_by(
+                date=appointment_time_pst
+            ).first()
+            
+            if existing_appointment:
+                flash('This time slot is already booked. Please select another time.')
+                return render_template('booking.html', form=form)
+            
+            # Create new appointment
+            service = Service.query.get(form.service.data)
+            if not service:
+                flash('Invalid service selected')
+                return render_template('booking.html', form=form)
+                
+            appointment = Appointment(
+                client_name=form.client_name.data,
+                client_email=form.client_email.data,
+                date=appointment_time_pst,
+                service=service.name
+            )
+            db.session.add(appointment)
+            db.session.commit()
+            
+            # Send email notifications
+            try:
+                send_appointment_confirmation(appointment)
+                flash('Appointment booked successfully! A confirmation email has been sent.')
+            except Exception as e:
+                app.logger.error(f"Failed to send email notification: {str(e)}")
+                flash('Appointment booked successfully! However, there was an issue sending the confirmation email.')
+            
+            return redirect(url_for('index'))
+            
+        except (ValueError, TypeError) as e:
+            app.logger.error(f"Invalid date format: {str(e)}")
+            flash('Invalid date format. Please select a valid time slot.')
+            return render_template('booking.html', form=form)
     
     return render_template('booking.html', form=form)
 
