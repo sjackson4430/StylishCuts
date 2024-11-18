@@ -63,34 +63,61 @@ def send_appointment_confirmation(appointment):
     '''
 
     try:
-        app.logger.info(f"Attempting to send confirmation emails for appointment {appointment.id}")
+        # Log the attempt
+        app.logger.info(f"Starting email send process for appointment {appointment.id}")
         
+        if not os.environ.get('SENDGRID_API_KEY'):
+            error_msg = "SendGrid API key is not configured"
+            app.logger.error(error_msg)
+            return False, error_msg
+
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         
-        # Customer email
+        # Prepare customer email
+        app.logger.info(f"Preparing customer confirmation email for {appointment.client_email}")
         message = Mail(
-            from_email='sjackson@jacksonwebdev.com',  # SendGrid verified sender
+            from_email='info@stylishcuts.com',  # SendGrid verified sender
             to_emails=appointment.client_email,
             subject='Appointment Confirmation - Stylish Cuts',
             html_content=render_template_string(customer_template, appointment=appointment)
         )
         
         # Send customer email
-        response = sg.send(message)
-        app.logger.info(f"Customer confirmation email sent. Status code: {response.status_code}")
-        
-        # Admin notification
+        try:
+            app.logger.info(f"Sending customer confirmation to {appointment.client_email}")
+            response = sg.send(message)
+            app.logger.info(f"SendGrid API Response - Status: {response.status_code}, Body: {response.body}, Headers: {response.headers}")
+            
+            if response.status_code not in [200, 201, 202]:
+                raise Exception(f"SendGrid API returned status code {response.status_code}")
+                
+        except Exception as e:
+            app.logger.error(f"Failed to send customer email: {str(e)}")
+            return False, f"Failed to send customer email: {str(e)}"
+
+        # Prepare admin email
+        app.logger.info("Preparing admin notification email")
         admin_message = Mail(
-            from_email='sjackson@jacksonwebdev.com',
-            to_emails='sjackson@jacksonwebdev.com',
+            from_email='info@stylishcuts.com',
+            to_emails='admin@stylishcuts.com',
             subject='New Appointment Booking',
             html_content=render_template_string(admin_template, appointment=appointment)
         )
         
         # Send admin email
-        response = sg.send(admin_message)
-        app.logger.info(f"Admin notification email sent. Status code: {response.status_code}")
-        
+        try:
+            app.logger.info("Sending admin notification")
+            response = sg.send(admin_message)
+            app.logger.info(f"Admin email SendGrid Response - Status: {response.status_code}")
+            
+            if response.status_code not in [200, 201, 202]:
+                raise Exception(f"SendGrid API returned status code {response.status_code}")
+                
+        except Exception as e:
+            app.logger.error(f"Failed to send admin email: {str(e)}")
+            return False, f"Failed to send admin email: {str(e)}"
+
+        app.logger.info("All emails sent successfully")
         return True, "Emails sent successfully"
         
     except Exception as e:
