@@ -1,53 +1,88 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero-section text-center py-5">
-    <h1>Welcome to Stylish Cuts</h1>
-    <p class="lead">Professional haircuts and styling for the modern gentleman</p>
-    <a href="{{ url_for('booking') }}" class="btn btn-primary btn-lg">Book Now</a>
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-3">Stylish Cuts Barbershop</h1>
+        <p class="lead">Where Style Meets Tradition</p>
+        <a href="{{ url_for('booking') }}" class="btn btn-barber mt-4">Book Your Appointment</a>
+    </div>
 </div>
 
-<div class="row mt-5">
-    <div class="col-md-6">
-        <h2>Our Services</h2>
-        <div class="list-group">
-            {% for service in services %}
-            <div class="list-group-item">
-                <h5 class="mb-1">{{ service.name }}</h5>
-                <p class="mb-1">{{ service.description }}</p>
-                <small>${{ "%.2f"|format(service.price) }} - {{ service.duration }} minutes</small>
+<div class="container">
+    <h2 class="section-title">Our Services</h2>
+    <div class="row">
+        {% for service in services %}
+        <div class="col-md-4">
+            <div class="service-card text-center">
+                <i class="fas fa-cut fa-3x mb-3" style="color: var(--barber-gold);"></i>
+                <h3>{{ service.name }}</h3>
+                <p>{{ service.description }}</p>
+                <p class="price">${{ "%.2f"|format(service.price) }}</p>
+                <a href="{{ url_for('booking') }}" class="btn btn-barber">Book Now</a>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
-
-    <div class="col-md-6">
-        <h2>Current Deals</h2>
+    
+    <h2 class="section-title">Special Deals</h2>
+    <div class="row">
         {% for deal in deals %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">{{ deal.title }}</h5>
-                <p class="card-text">{{ deal.description }}</p>
+        <div class="col-md-6">
+            <div class="service-card">
+                <h3>{{ deal.title }}</h3>
+                <p>{{ deal.description }}</p>
                 <small class="text-muted">Valid until: {{ deal.valid_until.strftime('%Y-%m-%d') }}</small>
             </div>
         </div>
         {% endfor %}
     </div>
+
+    <div class="testimonials-section py-5 my-5">
+        <div class="container">
+            <h2 class="section-title">What Our Clients Say</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="testimonial-card text-center p-4">
+                        <i class="fas fa-quote-left fa-2x mb-3" style="color: var(--barber-gold);"></i>
+                        <p>"Best haircut I've ever had. Professional service and great atmosphere!"</p>
+                        <p class="client-name" style="color: var(--barber-gold);">- John D.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card text-center p-4">
+                        <i class="fas fa-quote-left fa-2x mb-3" style="color: var(--barber-gold);"></i>
+                        <p>"The attention to detail and precision in their work is outstanding. Highly recommended!"</p>
+                        <p class="client-name" style="color: var(--barber-gold);">- Michael R.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card text-center p-4">
+                        <i class="fas fa-quote-left fa-2x mb-3" style="color: var(--barber-gold);"></i>
+                        <p>"Great experience every time. The staff is professional and the results are always perfect."</p>
+                        <p class="client-name" style="color: var(--barber-gold);">- David S.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="contact-section mt-5">
-    <h2>Contact Us</h2>
-    <div class="row">
-        <div class="col-md-6">
-            <p><strong>Address:</strong> 123 Main Street, City, State 12345</p>
-            <p><strong>Phone:</strong> (555) 123-4567</p>
-            <p><strong>Email:</strong> info@stylishcuts.com</p>
-        </div>
-        <div class="col-md-6">
-            <h3>Hours of Operation</h3>
-            <p>Monday - Friday: 9:00 AM - 8:00 PM</p>
-            <p>Saturday: 9:00 AM - 6:00 PM</p>
-            <p>Sunday: Closed</p>
+    <div class="container">
+        <h2 class="section-title">Contact Us</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Address:</strong> 123 Main Street, City, State 12345</p>
+                <p><strong>Phone:</strong> (555) 123-4567</p>
+                <p><strong>Email:</strong> info@stylishcuts.com</p>
+            </div>
+            <div class="col-md-6">
+                <h3 class="mb-4" style="color: var(--barber-gold);">Hours of Operation</h3>
+                <p>Monday - Friday: 9:00 AM - 8:00 PM</p>
+                <p>Saturday: 9:00 AM - 6:00 PM</p>
+                <p>Sunday: Closed</p>
+            </div>
         </div>
     </div>
 </div>

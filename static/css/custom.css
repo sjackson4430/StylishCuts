@@ -1,53 +1,92 @@
+:root {
+    --barber-primary: #1a1a1a;
+    --barber-secondary: #c41e3a;
+    --barber-accent: #f5f5f5;
+    --barber-gold: #d4af37;
+}
+
+body {
+    font-family: 'Playfair Display', serif;
+    background: var(--barber-primary);
+}
+
 .hero-section {
-    background-color: var(--bs-dark);
-    padding: 4rem 0;
-    margin-bottom: 2rem;
-    border-radius: 0.5rem;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 8rem 0;
+    color: var(--barber-accent);
+    text-align: center;
+    position: relative;
 }
 
-.contact-section {
-    background-color: var(--bs-dark);
+.service-card {
+    background: var(--barber-primary);
+    border: 1px solid var(--barber-gold);
     padding: 2rem;
-    border-radius: 0.5rem;
-    margin-top: 2rem;
+    margin: 1rem 0;
+    transition: transform 0.3s ease;
 }
 
-.card {
-    border: 1px solid var(--bs-border-color);
-    background-color: var(--bs-dark);
+.service-card:hover {
+    transform: translateY(-5px);
 }
 
-.list-group-item {
-    background-color: var(--bs-dark);
-    border-color: var(--bs-border-color);
+.btn-barber {
+    background: var(--barber-secondary);
+    color: var(--barber-accent);
+    border: none;
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+.btn-barber:hover {
+    background: var(--barber-gold);
+    color: var(--barber-primary);
+    transform: translateY(-2px);
 }
 
 .navbar {
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: var(--barber-primary) !important;
+    border-bottom: 2px solid var(--barber-gold);
 }
 
-.btn-primary {
-    margin: 0.5rem 0;
+.section-title {
+    color: var(--barber-gold);
+    text-align: center;
+    margin: 3rem 0;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
 }
 
-.table {
-    background-color: var(--bs-dark);
+.testimonial-card {
+    background: var(--barber-primary);
+    border: 1px solid var(--barber-gold);
+    margin: 1rem 0;
+    transition: transform 0.3s ease;
+}
+
+.card {
+    border: 1px solid var(--barber-gold);
+    background-color: var(--barber-primary);
 }
 
 .form-control {
-    background-color: var(--bs-dark);
-    border-color: var(--bs-border-color);
-    color: var(--bs-light);
+    background-color: var(--barber-primary);
+    border-color: var(--barber-gold);
+    color: var(--barber-accent);
 }
 
 .form-control:focus {
-    background-color: var(--bs-dark);
-    border-color: var(--bs-primary);
-    color: var(--bs-light);
+    background-color: var(--barber-primary);
+    border-color: var(--barber-secondary);
+    color: var(--barber-accent);
 }
 
 .alert-success {
     background-color: var(--bs-success);
-    color: var(--bs-light);
+    color: var(--barber-accent);
 }
