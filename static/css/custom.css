@@ -47,54 +47,6 @@
     color: var(--bs-light);
 }
 
-/* FullCalendar Dark Theme Styles */
-.fc {
-    background-color: var(--bs-dark);
-    border-color: var(--bs-border-color);
-}
-
-.fc-theme-standard td, 
-.fc-theme-standard th {
-    border-color: var(--bs-border-color);
-}
-
-.fc-timegrid-slot {
-    height: 4em !important;
-    border-color: var(--bs-border-color) !important;
-}
-
-.fc-timegrid-slot-lane {
-    background-color: var(--bs-dark);
-}
-
-.fc-highlight {
-    background-color: var(--bs-primary) !important;
-    opacity: 0.3;
-}
-
-.fc-event {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-border-color);
-}
-
-.fc-button-primary {
-    background-color: var(--bs-secondary) !important;
-    border-color: var(--bs-border-color) !important;
-}
-
-.fc-button-primary:hover {
-    background-color: var(--bs-primary) !important;
-}
-
-.fc-button-active {
-    background-color: var(--bs-primary) !important;
-}
-
-.selection-highlight {
-    background-color: var(--bs-success) !important;
-    opacity: 0.3;
-}
-
 .alert-success {
     background-color: var(--bs-success);
     color: var(--bs-light);
