@@ -9,6 +9,45 @@
     </div>
 </div>
 
+<div id="mainCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="{{ url_for('static', filename='images/image1.png') }}" class="d-block w-100" alt="Barbershop Interior">
+            <div class="carousel-caption">
+                <h5>Professional Atmosphere</h5>
+                <p>Experience our modern barbershop facilities</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/image2.png') }}" class="d-block w-100" alt="Professional Services">
+            <div class="carousel-caption">
+                <h5>Expert Grooming</h5>
+                <p>Our skilled barbers deliver exceptional service</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/image3.png') }}" class="d-block w-100" alt="Quality Services">
+            <div class="carousel-caption">
+                <h5>Premium Experience</h5>
+                <p>Discover our range of premium grooming services</p>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
 <div class="container">
     <h2 class="section-title">Our Services</h2>
     <div class="row">
@@ -67,44 +106,7 @@
         </div>
     </div>
 </div>
-<div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-indicators">
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-    </div>
-    <div class="carousel-inner">
-        <div class="carousel-item active">
-            <img src="{{ url_for('static', filename='images/image1.png') }}" class="d-block w-100" alt="Barbershop Interior">
-            <div class="carousel-caption">
-                <h5>Professional Atmosphere</h5>
-                <p>Experience our modern barbershop facilities</p>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <img src="{{ url_for('static', filename='images/image2.png') }}" class="d-block w-100" alt="Professional Services">
-            <div class="carousel-caption">
-                <h5>Expert Grooming</h5>
-                <p>Our skilled barbers deliver exceptional service</p>
-            </div>
-        </div>
-        <div class="carousel-item">
-            <img src="{{ url_for('static', filename='images/image3.png') }}" class="d-block w-100" alt="Quality Services">
-            <div class="carousel-caption">
-                <h5>Premium Experience</h5>
-                <p>Discover our range of premium grooming services</p>
-            </div>
-        </div>
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-    </button>
-</div>
+
 <div class="contact-section mt-5">
     <div class="container">
         <h2 class="section-title">Contact Us</h2>
@@ -123,5 +125,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
 {% endblock %}
