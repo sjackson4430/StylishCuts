@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="100%" height="100%" fill="#2C3E50"/>
+  <text x="400" y="200" font-family="Arial" font-size="48" fill="#F1C40F" text-anchor="middle">Stylish Cuts Interior</text>
+  <g transform="translate(350,300)" stroke="#F1C40F" stroke-width="2" fill="none">
+    <rect x="-50" y="-50" width="200" height="150"/>
+    <circle cx="50" cy="25" r="30"/>
+  </g>
+</svg>
