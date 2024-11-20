@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, Deal, Service
+from models import User, Deal, Service, Appointment
 from forms import LoginForm, DealForm, ServiceForm
 from datetime import datetime
 
