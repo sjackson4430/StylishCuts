@@ -37,9 +37,36 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+from utils.email_utils import send_appointment_confirmation
+
 @app.route('/booking')
 def booking():
     return render_template('booking.html')
+
+@app.route('/webhook/appointment', methods=['POST'])
+def appointment_webhook():
+    try:
+        data = request.json
+        # Create appointment record
+        appointment = Appointment(
+            client_name=data['firstName'] + ' ' + data['lastName'],
+            client_email=data['email'],
+            date=datetime.fromisoformat(data['datetime'].replace('Z', '+00:00')),
+            service=data['type'],
+            status='confirmed'
+        )
+        db.session.add(appointment)
+        db.session.commit()
+        
+        # Send email notifications
+        success, error_message = send_appointment_confirmation(appointment)
+        if not success:
+            app.logger.error(f"Failed to send email notifications: {error_message}")
+            
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        app.logger.error(f"Error processing appointment webhook: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/admin')
 @login_required
